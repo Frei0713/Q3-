@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Factorial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+        }
+        input, button {
+            padding: 5px;
+            margin: 10px;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+        .success {
+            color: green;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Factorial</h1>
+        <input type="number" id="numero" placeholder="Ingrese un número" min="0" step="1">
+        <button onclick="calcularFactorial()">Calcular</button>
+        <p id="resultado"></p>
+        <p id="historial"></p>
+    </div>
+
+    <script>
+        // Historial de cálculos
+        let historialCalculos = [];
+
+        function validarEntrada(numero) {
+            if (isNaN(numero)) {
+                throw new Error('Por favor ingrese un número válido');
+            }
+            if (numero < 0) {
+                throw new Error('No se puede calcular el factorial de números negativos');
+            }
+            if (!Number.isInteger(numero)) {
+                throw new Error('Por favor ingrese un número entero');
+            }
+            if (numero > 170) {
+                throw new Error('El número es demasiado grande para calcular su factorial');
+            }
+        }
+
+        function calcularFactorial() {
+            const resultadoElement = document.getElementById('resultado');
+            const historialElement = document.getElementById('historial');
+            
+            try {
+                const numero = parseInt(document.getElementById('numero').value);
+                validarEntrada(numero);
+                
+                let factorial = 1;
+                for (let i = 1; i <= numero; i++) {
+                    factorial *= i;
+                }
+                
+                // Guardar en historial
+                const calculo = {
+                    numero: numero,
+                    resultado: factorial,
+                    fecha: new Date().toLocaleString()
+                };
+                historialCalculos.push(calculo);
+                
+                // Mostrar resultado
+                resultadoElement.textContent = `El factorial de ${numero} es: ${factorial}`;
+                resultadoElement.className = 'success';
+                
+                // Actualizar historial
+                historialElement.innerHTML = '<h3>Últimos cálculos:</h3>' + 
+                    historialCalculos.slice(-3).map(calc => 
+                        `${calc.numero}! = ${calc.resultado} (${calc.fecha})`
+                    ).join('<br>');
+                
+            } catch (error) {
+                resultadoElement.textContent = error.message;
+                resultadoElement.className = 'error';
+            }
+        }
+
+        // Limpiar campos al cargar la página
+        window.onload = function() {
+            document.getElementById('numero').value = '';
+            document.getElementById('resultado').textContent = '';
+        }
+    </script>
+</body>
+</html> 

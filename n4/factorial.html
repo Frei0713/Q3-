@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Factorial</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Factorial</h1>
+        <div class="form-container">
+            <input type="number" id="numero" placeholder="Ingrese un número" min="0" step="1">
+            <button onclick="calcularFactorial()">Calcular</button>
+        </div>
+        <div id="resultado"></div>
+        <div id="historial" class="historial"></div>
+        
+        <div class="metricas-container">
+            <h2>Métricas y Análisis</h2>
+            <div class="metricas-grid">
+                <div class="metrica-item">
+                    <h3>Total de Cálculos</h3>
+                    <p id="totalCalculos">0</p>
+                </div>
+                <div class="metrica-item">
+                    <h3>Tiempo Promedio</h3>
+                    <p id="tiempoPromedio">0 ms</p>
+                </div>
+                <div class="metrica-item">
+                    <h3>Desviación Estándar</h3>
+                    <p id="desviacionEstandar">0 ms</p>
+                </div>
+                <div class="metrica-item">
+                    <h3>Porcentaje de Errores</h3>
+                    <p id="porcentajeErrores">0%</p>
+                </div>
+                <div class="metrica-item">
+                    <h3>Número Más Frecuente</h3>
+                    <p id="numeroMasFrecuente">-</p>
+                </div>
+            </div>
+            <div class="ultimos-tiempos">
+                <h3>Últimos 5 Tiempos de Cálculo</h3>
+                <div id="ultimosTiempos"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/factorial.js"></script>
+    <script src="js/metricas.js"></script>
+    <script>
+        // Instancias de las clases
+        const calculador = new FactorialCalculator();
+        const metricas = new MetricasCalculator();
+
+        /**
+         * Función principal para calcular el factorial
+         */
+        function calcularFactorial() {
+            const resultadoElement = document.getElementById('resultado');
+            const historialElement = document.getElementById('historial');
+            
+            try {
+                const numero = parseInt(document.getElementById('numero').value);
+                const tiempoInicio = performance.now();
+                
+                const factorial = calculador.calcular(numero);
+                
+                const tiempoFin = performance.now();
+                const tiempoCalculo = tiempoFin - tiempoInicio;
+                
+                // Registrar métricas
+                metricas.registrarOperacion(numero, tiempoCalculo, true);
+                
+                // Guardar en historial
+                calculador.agregarAlHistorial(numero, factorial);
+                
+                // Mostrar resultado
+                resultadoElement.textContent = `El factorial de ${numero} es: ${factorial}`;
+                resultadoElement.className = 'success';
+                
+                // Actualizar historial y métricas
+                actualizarHistorial(historialElement);
+                actualizarMetricas();
+                
+            } catch (error) {
+                const tiempoFin = performance.now();
+                metricas.registrarOperacion(
+                    parseInt(document.getElementById('numero').value) || 0,
+                    tiempoFin - performance.now(),
+                    false
+                );
+                
+                resultadoElement.textContent = error.message;
+                resultadoElement.className = 'error';
+                actualizarMetricas();
+            }
+        }
+
+        /**
+         * Actualiza la visualización del historial
+         * @param {HTMLElement} element - Elemento donde mostrar el historial
+         */
+        function actualizarHistorial(element) {
+            const historial = calculador.obtenerHistorial();
+            element.innerHTML = '<h3>Últimos cálculos:</h3>' + 
+                historial.map(calc => 
+                    `<div class="historial-item">
+                        ${calc.numero}! = ${calc.resultado}<br>
+                        <small>${calc.fecha}</small>
+                    </div>`
+                ).join('');
+        }
+
+        /**
+         * Actualiza la visualización de las métricas
+         */
+        function actualizarMetricas() {
+            const metricasActuales = metricas.obtenerMetricas();
+            
+            document.getElementById('totalCalculos').textContent = metricasActuales.totalCalculos;
+            document.getElementById('tiempoPromedio').textContent = `${metricasActuales.tiempoPromedio} ms`;
+            document.getElementById('desviacionEstandar').textContent = `${metricasActuales.desviacionEstandar} ms`;
+            document.getElementById('porcentajeErrores').textContent = `${metricasActuales.porcentajeErrores}%`;
+            document.getElementById('numeroMasFrecuente').textContent = 
+                metricasActuales.numeroMasFrecuente !== null ? metricasActuales.numeroMasFrecuente : '-';
+            
+            // Actualizar últimos tiempos
+            const ultimosTiemposElement = document.getElementById('ultimosTiempos');
+            ultimosTiemposElement.innerHTML = metricasActuales.ultimosTiempos
+                .map(tiempo => `<div class="tiempo-item">${tiempo.toFixed(2)} ms</div>`)
+                .join('');
+        }
+
+        // Limpiar campos al cargar la página
+        window.onload = function() {
+            document.getElementById('numero').value = '';
+            document.getElementById('resultado').textContent = '';
+            actualizarMetricas();
+        }
+    </script>
+</body>
+</html> 
